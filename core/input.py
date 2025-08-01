@@ -1,17 +1,14 @@
 import time
+from core.window import focus_game_window
+
 try:
-    import pyvjoy  # Pour l'émulation HOTAS/joystick
-except ImportError:
-    pyvjoy = None
-try:
-    import pydirectinput  # Pour l'émulation clavier/souris (plus fiable que pyautogui pour les jeux)
+    import pydirectinput  # Automatisation clavier/souris fiable pour les jeux
 except ImportError:
     pydirectinput = None
 
 class InputController:
     def __init__(self, binds):
         self.binds = binds  # Instance de BindProfile
-        self.use_vjoy = pyvjoy is not None
         self.use_directinput = pydirectinput is not None
 
     def send_key(self, action, hold=0.1):
@@ -20,26 +17,28 @@ class InputController:
             print(f"[Input] Aucun bind trouvé pour l'action : {action}")
             return False
 
-        key = keys[0]  # On prend le premier bind (à améliorer si multi-bind)
-        if self.use_directinput:
-            print(f"[Input] Send key via pydirectinput : {key}")
-            pydirectinput.keyDown(key)
-            time.sleep(hold)
-            pydirectinput.keyUp(key)
-            return True
+        key = keys[0]
+        print(f"[Input] Essai d'envoi de la touche/bouton '{key}' pour l'action '{action}'")
+
+        # Gestion clavier uniquement
+        if key and key.lower().startswith("keyboard_"):
+            key_name = key[9:].lower()  # Enlève 'Keyboard_' et met en minuscule
+            print(f"[Input] Utilisation de pydirectinput pour : {key_name}")
+            if self.use_directinput:
+                focus_game_window()  # Force le focus avant chaque touche !
+                pydirectinput.keyDown(key_name)
+                time.sleep(hold)
+                pydirectinput.keyUp(key_name)
+                print(f"[Input] Touche '{key_name}' envoyée (pydirectinput)")
+                return True
+            else:
+                print("[Input] PyDirectInput non disponible. Pas d'action.")
+                return False
+
+        elif key and key.lower().startswith("joy_"):
+            print(f"[Input] Bind joystick détecté : {key} (NON GÉRÉ, AJOUTE UN BIND CLAVIER dans Elite Dangerous pour cette action !)")
+            return False
+
         else:
-            print(f"[Input] Fallback (non implémenté) : {key}")
-            # Ici tu peux rajouter pyautogui ou autre
+            print(f"[Input] Type de bind inconnu ou non pris en charge : {key}")
             return False
-
-    def send_vjoy(self, button_id, duration=0.1):
-        if not self.use_vjoy:
-            print("[Input] vJoy non disponible.")
-            return False
-        joystick = pyvjoy.VJoyDevice(1)
-        joystick.set_button(button_id, 1)
-        time.sleep(duration)
-        joystick.set_button(button_id, 0)
-        return True
-
-# À étendre avec les méthodes HOTAS, axes, etc.

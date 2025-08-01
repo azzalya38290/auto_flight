@@ -7,17 +7,30 @@ class AutoPilot:
         self.state = state
 
     def launch_sequence(self):
-        # Décollage automatique
-        print("[AutoPilot] Séquence de décollage lancée.")
-        if not self.state.get_state()['docked']:
-            print("[AutoPilot] Pas docké ! Séquence annulée.")
+        print("[AutoPilot] Séquence de décollage (navigation Auto Launch).")
+        state = self.state.get_state()
+        if not state['docked']:
+            print("[AutoPilot] Pas docké ! Séquence annulée.")
             return False
-        # 1. Relève le train d’atterrissage si besoin
-        self.input.send_key("Launch") or self.input.send_key("UI_Select")
-        time.sleep(6)  # Laisse le temps au vaisseau de sortir
-        # 2. Boost pour sortir rapidement
-        self.input.send_key("EngineBoost")
+
+        # Pause AVANT de commencer (laisse le temps au focus de bien s'installer)
+        print("[AutoPilot] Attente 3s avant la séquence.")
+        time.sleep(3)
+
+        for i in range(2):
+            print(f"[AutoPilot] Appui {i+1}/2 sur 'UI_Down'")
+            ok = self.input.send_key("UI_Down", hold=0.2)
+            if not ok:
+                print(f"[AutoPilot] Impossible d'envoyer 'UI_Down' ({i+1}/2).")
+            time.sleep(2.5)  # Pause rallongée
+
+        print("[AutoPilot] Appui sur 'UI_Select' pour valider")
+        ok = self.input.send_key("UI_Select", hold=0.2)
+        if not ok:
+            print("[AutoPilot] Impossible d'envoyer 'UI_Select'.")
+        else:
+            print("[AutoPilot] Sélection Auto Launch envoyée.")
+        time.sleep(2.5)  # Pause après sélection
+
         print("[AutoPilot] Décollage terminé.")
         return True
-
-    # Tu peux ajouter ici : travel_sequence, landing_sequence, etc.
