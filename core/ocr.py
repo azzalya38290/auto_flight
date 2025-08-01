@@ -1,49 +1,51 @@
-import mss
-import numpy as np
 import cv2
+import numpy as np
+import mss
 import pytesseract
 
-# Adjust these values for your screen/game HUD!
-SYSTEM_NAME_REGION = {"top": 50, "left": 700, "width": 400, "height": 50}
-CONTACT_LINE_REGION = {"top": 360, "left": 480, "width": 470, "height": 38}
+# System Name
+SYSTEM_SRC_POINTS = np.float32([
+    [73.0, 1238.0], [332.0, 1216.0], [341.0, 1246.0], [79.0, 1273.0]
+])
+SYSTEM_WIDTH, SYSTEM_HEIGHT = 270, 40
 
-def _show_preview(img, ocr_text, title="OCR Preview"):
-    if ocr_text:
-        ocr_text = ocr_text.split("\n")[0]
-    window_title = f"{title}: '{ocr_text}'"
-    cv2.imshow(window_title, img)
-    # Wait: 1.5s or until user presses 'q'
-    key = cv2.waitKey(1500)
-    cv2.destroyAllWindows()
+# Contact Line -- REMPLACE par tes points
+CONTACT_SRC_POINTS = np.float32([
+    [100.0, 1100.0], [350.0, 1090.0], [355.0, 1120.0], [105.0, 1130.0]
+])
+CONTACT_WIDTH, CONTACT_HEIGHT = 270, 40
 
-def read_system_name():
-    """
-    Capture the HUD region where the system name appears.
-    Returns OCR text, and shows a preview image for debugging.
-    """
+def deskew_and_ocr(src_points, width, height, thresh=140, psm=7, show_preview=True, region_name="OCR Region"):
     with mss.mss() as sct:
-        img = np.array(sct.grab(SYSTEM_NAME_REGION))
-        img_gray = cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY)
-        _, img_bin = cv2.threshold(img_gray, 100, 255, cv2.THRESH_BINARY)
-        text = pytesseract.image_to_string(img_bin, config='--psm 6').strip()
-        print(f"[OCR] Read system name: '{text}'")
-        _show_preview(img_bin, text, "System Name OCR")
-        if text:
-            text = text.split("\n")[0]
+        mon = sct.monitors[1]
+        full_img = np.array(sct.grab({
+            "top": mon["top"], "left": mon["left"],
+            "width": mon["width"], "height": mon["height"]
+        }))
+        dst_points = np.float32([
+            [0, 0], [width, 0], [width, height], [0, height]
+        ])
+        matrix = cv2.getPerspectiveTransform(src_points, dst_points)
+        deskewed = cv2.warpPerspective(full_img, matrix, (width, height))
+        img_gray = cv2.cvtColor(deskewed, cv2.COLOR_BGRA2GRAY)
+        _, img_bin = cv2.threshold(img_gray, thresh, 255, cv2.THRESH_BINARY)
+        text = pytesseract.image_to_string(img_bin, config=f'--psm {psm}').strip()
+        if show_preview:
+            cv2.imshow(region_name, img_bin)
+            cv2.waitKey(1200)
+            cv2.destroyWindow(region_name)
         return text
 
-def read_contact_line():
-    """
-    Capture the highlighted line in the contacts list (left panel).
-    Returns OCR text, and shows a preview image for debugging.
-    """
-    with mss.mss() as sct:
-        img = np.array(sct.grab(CONTACT_LINE_REGION))
-        img_gray = cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY)
-        _, img_bin = cv2.threshold(img_gray, 100, 255, cv2.THRESH_BINARY)
-        text = pytesseract.image_to_string(img_bin, config='--psm 7').strip()
-        print(f"[OCR] Read contact line: '{text}'")
-        _show_preview(img_bin, text, "Contact Line OCR")
-        if text:
-            text = text.split("\n")[0]
-        return text
+def read_system_name(show_preview=True):
+    text = deskew_and_ocr(SYSTEM_SRC_POINTS, SYSTEM_WIDTH, SYSTEM_HEIGHT, thresh=140, psm=7, show_preview=show_preview, region_name="System OCR")
+    print(f"[OCR] System Name: '{text}'")
+    return text
+
+def read_contact_line(show_preview=True):
+    text = deskew_and_ocr(CONTACT_SRC_POINTS, CONTACT_WIDTH, CONTACT_HEIGHT, thresh=140, psm=7, show_preview=show_preview, region_name="Contact OCR")
+    print(f"[OCR] Contact Line: '{text}'")
+    return text
+
+if __name__ == "__main__":
+    print("OCR SYSTEM NAME : ", read_system_name(show_preview=True))
+    print("OCR CONTACT LINE : ", read_contact_line(show_preview=True))

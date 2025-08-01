@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (
     QWidget, QLineEdit, QHBoxLayout, QCheckBox, QFileDialog, QTextEdit, QSizePolicy, QFrame
 )
 from PySide6.QtCore import QTimer, Qt
-from PySide6.QtGui import QFont, QColor
+from PySide6.QtGui import QFont, QColor, QTextCursor
 
 class MainWindow(QMainWindow):
     def __init__(self, state, autopilot):
@@ -50,7 +50,6 @@ class MainWindow(QMainWindow):
         self.launch_btn.clicked.connect(self.launch_sequence)
         btn_layout.addWidget(self.launch_btn)
 
-        # Removed Auto Dock button!
         self.request_dock_btn = QPushButton("Request Docking")
         self.request_dock_btn.clicked.connect(self.request_docking)
         btn_layout.addWidget(self.request_dock_btn)
@@ -127,7 +126,7 @@ class MainWindow(QMainWindow):
             self.log_box.setTextColor(QColor(color))
             self.log_box.append(msg)
         self._log_buffer.clear()
-        self.log_box.moveCursor(cursor.End)
+        self.log_box.moveCursor(QTextCursor.End)  # <-- Correction ici
 
     def launch_sequence(self):
         self.log("⏫ [Launch] Started.", "#b0f251")
