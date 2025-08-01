@@ -1,5 +1,4 @@
 import time
-from core.window import focus_game_window
 
 try:
     import pydirectinput  # Automatisation clavier/souris fiable pour les jeux
@@ -11,7 +10,7 @@ class InputController:
         self.binds = binds  # Instance de BindProfile
         self.use_directinput = pydirectinput is not None
 
-    def send_key(self, action, hold=0.1):
+    def send_key(self, action, hold=0.15, focus=False):
         keys = self.binds.get_binding(action)
         if not keys:
             print(f"[Input] Aucun bind trouvé pour l'action : {action}")
@@ -20,12 +19,14 @@ class InputController:
         key = keys[0]
         print(f"[Input] Essai d'envoi de la touche/bouton '{key}' pour l'action '{action}'")
 
-        # Gestion clavier uniquement
         if key and key.lower().startswith("keyboard_"):
-            key_name = key[9:].lower()  # Enlève 'Keyboard_' et met en minuscule
+            key_name = key[9:].lower()
             print(f"[Input] Utilisation de pydirectinput pour : {key_name}")
             if self.use_directinput:
-                focus_game_window()  # Force le focus avant chaque touche !
+                if focus:
+                    from core.window import focus_game_window
+                    focus_game_window()
+                    time.sleep(0.1)
                 pydirectinput.keyDown(key_name)
                 time.sleep(hold)
                 pydirectinput.keyUp(key_name)

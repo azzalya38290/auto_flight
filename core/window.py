@@ -1,4 +1,3 @@
-import time
 import win32gui
 import win32con
 
@@ -21,6 +20,3 @@ def focus_game_window():
     else:
         print("[Window] Impossible de trouver la fenêtre Elite Dangerous.")
         return False
-
-if __name__ == "__main__":
-    focus_game_window()

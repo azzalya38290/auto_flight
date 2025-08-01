@@ -1,5 +1,6 @@
 import time
 from core.state import GLOBAL_STATE
+from core.window import focus_game_window
 
 class AutoPilot:
     def __init__(self, input_controller, state=GLOBAL_STATE):
@@ -13,24 +14,25 @@ class AutoPilot:
             print("[AutoPilot] Pas docké ! Séquence annulée.")
             return False
 
-        # Pause AVANT de commencer (laisse le temps au focus de bien s'installer)
-        print("[AutoPilot] Attente 3s avant la séquence.")
-        time.sleep(3)
+        print("[AutoPilot] Focus sur la fenêtre du jeu...")
+        focus_game_window()
+        print("[AutoPilot] Attente 2s pour stabilisation du focus...")
+        time.sleep(2)
 
         for i in range(2):
             print(f"[AutoPilot] Appui {i+1}/2 sur 'UI_Down'")
-            ok = self.input.send_key("UI_Down", hold=0.2)
+            ok = self.input.send_key("UI_Down", hold=0.2, focus=False)
             if not ok:
                 print(f"[AutoPilot] Impossible d'envoyer 'UI_Down' ({i+1}/2).")
-            time.sleep(2.5)  # Pause rallongée
+            time.sleep(2.5)
 
         print("[AutoPilot] Appui sur 'UI_Select' pour valider")
-        ok = self.input.send_key("UI_Select", hold=0.2)
+        ok = self.input.send_key("UI_Select", hold=0.2, focus=False)
         if not ok:
             print("[AutoPilot] Impossible d'envoyer 'UI_Select'.")
         else:
             print("[AutoPilot] Sélection Auto Launch envoyée.")
-        time.sleep(2.5)  # Pause après sélection
+        time.sleep(2.5)
 
         print("[AutoPilot] Décollage terminé.")
         return True
