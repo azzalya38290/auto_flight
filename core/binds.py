@@ -3,16 +3,20 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ACTIONS = [
+    "UI_Panel_Left",
     "UI_Down",
-    "UI_Select",
     "UI_Up",
     "UI_Back",
     "Launch",
     "EngineBoost",
     "Supercruise",
-    "GalaxyMap",           # Ouvre la carte galactique
-    "UI_Focus_Search",     # Focus barre recherche GalaxyMap (tab ou '/')
-    "HyperSuperCombination", # Jump FSD
+    "GalaxyMap",
+    "UI_Focus_Search",
+    "HyperSuperCombination",
+    "UI_Right",
+    "UI_Left",
+    "UI_Select",
+    # Add any other actions your bot uses
 ]
 
 BINDS_FOLDER = Path(os.path.expandvars(
@@ -22,7 +26,7 @@ BINDS_FOLDER = Path(os.path.expandvars(
 def get_latest_binds_file() -> Path:
     files = sorted(BINDS_FOLDER.glob("*.binds"))
     if not files:
-        raise FileNotFoundError("Aucun fichier .binds trouvé")
+        raise FileNotFoundError("No .binds file found")
     return max(files, key=lambda f: f.stat().st_mtime)
 
 class BindProfile:
@@ -50,5 +54,5 @@ class BindProfile:
 
 def load_active_profile():
     path = get_latest_binds_file()
-    print(f"[Binds] Profil actif chargé : {path.name}")
+    print(f"[Binds] Active profile loaded: {path.name}")
     return BindProfile(path)
