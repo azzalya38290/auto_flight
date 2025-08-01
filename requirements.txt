@@ -1,0 +1,16 @@
+# Interface graphique
+PySide6
+
+# Automatisation clavier/souris/joystick
+PyDirectInput
+pywin32
+
+# Screenshot & OCR
+mss
+opencv-python
+pytesseract
+
+# Logging amélioré (optionnel)
+loguru
+
+# Requis pour manipuler les fichiers .binds (XML) : déjà inclus (xml.etree)
